@@ -45,16 +45,19 @@ const SERVICES_DATA = {
   }
 };
 
-// ─── LOGOS CONFIG — Agrega tus logos aquí ───────────────────────────────────
-// Pon los archivos en: client/public/logos/
-const LOGOS_CONFIG = [
-  { id: 'simbolo-dorado',   label: 'Símbolo Dorado',    file: '/logos/logo-simbolo-dorado.png',      usage: 'Marca de agua discreta',    position: 'bottom-right' },
-  { id: 'horizontal-blanco', label: 'Logo Blanco',      file: '/logos/logo-horizontal-blanco.png',   usage: 'Sobre fondos oscuros',      position: 'bottom-center' },
-  { id: 'horizontal-negro',  label: 'Logo Negro',       file: '/logos/logo-horizontal-negro.png',    usage: 'Sobre fondos claros',       position: 'bottom-center' },
-  { id: 'isotipo',           label: 'Isotipo',           file: '/logos/logo-isotipo.png',             usage: 'Esquina superior derecha',  position: 'top-right' },
-];
+// ─── LOGOS — Se cargan dinámicamente desde /api/logos ───────────────────────
+// Formatos soportados: .png, .jpg, .jpeg, .webp, .svg, .gif
+// Pon cualquier imagen en: client/public/logos/ y aparecerá automáticamente.
 
 const AUTO_ROTATION = { id: 'auto', label: 'Rotación automática', usage: 'El sistema escoge el logo más adecuado según el estilo visual' };
+
+// Fallback en caso de que la API no responda
+const LOGOS_FALLBACK = [
+  { id: 'logo-0', label: 'logo BLANCO',          file: '/logos/logo%20BLANCO%20.png',              tipo: 'claro',  usage: 'Sobre fondos oscuros',   position: 'bottom-center' },
+  { id: 'logo-1', label: 'logos negro-07',        file: '/logos/logos%20negro-07.png',              tipo: 'oscuro', usage: 'Sobre fondos claros',    position: 'bottom-center' },
+  { id: 'logo-2', label: 'Logo Jenniffer 2023',   file: '/logos/Logo%20Jenniffer%202023_Mesa%20de%20trabajo%201.png', tipo: 'general', usage: 'Uso general', position: 'bottom-right' },
+  { id: 'logo-3', label: 'Mesa de trabajo 26',    file: '/logos/Mesa%20de%20trabajo%2026.png',      tipo: 'isotipo', usage: 'Esquina o marca de agua', position: 'top-right' },
+];
 
 // ─── COMPONENTE ──────────────────────────────────────────────────────────────
 const PromptStudio = ({ usuario, onSavePost }) => {
@@ -68,12 +71,39 @@ const PromptStudio = ({ usuario, onSavePost }) => {
   const [specification, setSpecification]   = useState('');
   const [referenceImages, setReferenceImages] = useState([]);
   const [logoId, setLogoId]                 = useState('auto');
+  const [logosConfig, setLogosConfig]       = useState(LOGOS_FALLBACK);
+  const [logosCargando, setLogosCargando]   = useState(true);
   const [generando, setGenerando]           = useState(false);
   const [resultado, setResultado]           = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(0);
   const [copiedCaption, setCopiedCaption]   = useState(false);
   const [copiedPrompt, setCopiedPrompt]     = useState(false);
   const fileInputRef                        = useRef(null);
+
+  // Cargar logos dinámicamente desde la API
+  useEffect(() => {
+    const cargarLogos = async () => {
+      setLogosCargando(true);
+      try {
+        const res = await fetch('/api/logos');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.logos && data.logos.length > 0) {
+            setLogosConfig(data.logos);
+          } else {
+            setLogosConfig(LOGOS_FALLBACK);
+          }
+        } else {
+          setLogosConfig(LOGOS_FALLBACK);
+        }
+      } catch {
+        setLogosConfig(LOGOS_FALLBACK);
+      } finally {
+        setLogosCargando(false);
+      }
+    };
+    cargarLogos();
+  }, []);
 
   const currentService = SERVICES_DATA[theme];
   const currentSubtype = currentService.subtypes.find(s => s.id === subtypeId) || currentService.subtypes[0];
@@ -104,12 +134,12 @@ const PromptStudio = ({ usuario, onSavePost }) => {
   const getLogoForPrompt = () => {
     if (logoId === 'auto') {
       const styleMap = {
-        'Editorial oscuro elegante': LOGOS_CONFIG.find(l => l.id === 'horizontal-blanco'),
-        'Minimalista marfil': LOGOS_CONFIG.find(l => l.id === 'horizontal-negro'),
+        'Editorial oscuro elegante': logosConfig.find(l => l.tipo === 'claro'),
+        'Minimalista marfil':        logosConfig.find(l => l.tipo === 'oscuro'),
       };
-      return styleMap[style] || LOGOS_CONFIG[0];
+      return styleMap[style] || logosConfig.find(l => l.tipo === 'isotipo') || logosConfig[0];
     }
-    return LOGOS_CONFIG.find(l => l.id === logoId) || LOGOS_CONFIG[0];
+    return logosConfig.find(l => l.id === logoId) || logosConfig[0];
   };
 
   const handleGenerate = async () => {
@@ -328,61 +358,97 @@ Modo: ${mode}
           <div style={{ ...s.field, gridColumn: '1/-1' }}>
             <div style={s.fieldTitleRow}>
               <label style={s.label}>LOGO CORPORATIVO</label>
-              <small style={s.small}>Siempre incluido en el prompt visual</small>
+              <small style={s.small}>
+                {logosCargando
+                  ? 'Cargando logos...'
+                  : `${logosConfig.length} logo(s) • PNG, JPG, SVG soportados`}
+              </small>
             </div>
 
-            <div style={s.logoGrid}>
-              {/* Opción auto */}
-              <div
-                style={{ ...s.logoCard, ...(logoId === 'auto' ? s.logoCardActive : {}) }}
-                onClick={() => setLogoId('auto')}
-              >
-                <div style={s.logoCardAuto}>↺</div>
-                <span style={s.logoCardLabel}>Auto</span>
-                <span style={s.logoCardUsage}>Según estilo</span>
+            {logosCargando ? (
+              <div style={s.logosLoading}>
+                <span style={s.spinner} /> Detectando logos en /public/logos/...
               </div>
-
-              {/* Logos reales */}
-              {LOGOS_CONFIG.map(logo => (
+            ) : (
+              <div style={s.logoGrid}>
+                {/* Opción auto */}
                 <div
-                  key={logo.id}
-                  style={{ ...s.logoCard, ...(logoId === logo.id ? s.logoCardActive : {}) }}
-                  onClick={() => setLogoId(logo.id)}
+                  style={{ ...s.logoCard, ...(logoId === 'auto' ? s.logoCardActive : {}) }}
+                  onClick={() => setLogoId('auto')}
                 >
-                  <div style={s.logoImgWrap}>
-                    <img
-                      src={logo.file}
-                      alt={logo.label}
-                      style={s.logoImg}
-                      onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
-                    />
-                    <div style={{ ...s.logoPlaceholder, display: 'none' }}>
-                      <span style={{ fontSize: '18px' }}>🏷</span>
-                    </div>
-                  </div>
-                  <span style={s.logoCardLabel}>{logo.label}</span>
-                  <span style={s.logoCardUsage}>{logo.usage}</span>
-                  {logoId === logo.id && <div style={s.logoCheck}>✓</div>}
+                  <div style={s.logoCardAuto}>↺</div>
+                  <span style={s.logoCardLabel}>Auto</span>
+                  <span style={s.logoCardUsage}>Según estilo</span>
                 </div>
-              ))}
-            </div>
+
+                {/* Logos reales — todos los formatos */}
+                {logosConfig.map(logo => (
+                  <div
+                    key={logo.id}
+                    style={{ ...s.logoCard, ...(logoId === logo.id ? s.logoCardActive : {}) }}
+                    onClick={() => setLogoId(logo.id)}
+                    title={logo.label}
+                  >
+                    <div style={s.logoImgWrap}>
+                      {logo.ext === 'svg' ? (
+                        // SVG: usar object tag para que renderice correctamente
+                        <object
+                          data={logo.file}
+                          type="image/svg+xml"
+                          style={s.logoImg}
+                          aria-label={logo.label}
+                        >
+                          <div style={{ ...s.logoPlaceholder, display: 'flex' }}>
+                            <span style={{ fontSize: '14px' }}>SVG</span>
+                          </div>
+                        </object>
+                      ) : (
+                        // PNG, JPG, WEBP, GIF
+                        <img
+                          src={logo.file}
+                          alt={logo.label}
+                          style={s.logoImg}
+                          loading="lazy"
+                          onError={e => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                      )}
+                      <div style={{ ...s.logoPlaceholder, display: 'none' }}>
+                        <span style={{ fontSize: '11px', color: '#afa99c' }}>
+                          {logo.ext?.toUpperCase() || '?'}
+                        </span>
+                      </div>
+                    </div>
+                    <span style={s.logoCardLabel} title={logo.label}>
+                      {logo.label.length > 14 ? logo.label.slice(0, 13) + '…' : logo.label}
+                    </span>
+                    <span style={s.logoCardUsage}>{logo.usage}</span>
+                    {logoId === logo.id && <div style={s.logoCheck}>✓</div>}
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Info del logo seleccionado */}
-            <div style={s.logoInfoBar}>
-              <span style={s.logoInfoIcon}>◆</span>
-              <div>
-                <strong style={s.logoInfoName}>
-                  {logoId === 'auto' ? 'Rotación automática' : LOGOS_CONFIG.find(l => l.id === logoId)?.label}
-                </strong>
-                <span style={s.logoInfoUsage}>
-                  {' — '}
-                  {logoId === 'auto' ? AUTO_ROTATION.usage : LOGOS_CONFIG.find(l => l.id === logoId)?.usage}
-                </span>
+            {!logosCargando && (
+              <div style={s.logoInfoBar}>
+                <span style={s.logoInfoIcon}>◆</span>
+                <div>
+                  <strong style={s.logoInfoName}>
+                    {logoId === 'auto' ? 'Rotación automática' : logosConfig.find(l => l.id === logoId)?.label}
+                  </strong>
+                  <span style={s.logoInfoUsage}>
+                    {' — '}
+                    {logoId === 'auto' ? AUTO_ROTATION.usage : logosConfig.find(l => l.id === logoId)?.usage}
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
 
             <p style={s.logoHint}>
-              💡 Agrega tus logos en <code style={s.code}>client/public/logos/</code>
+              💡 Agrega cualquier imagen (PNG, JPG, SVG) en <code style={s.code}>client/public/logos/</code> y aparecerá aquí automáticamente.
             </p>
           </div>
 
@@ -542,7 +608,8 @@ const s = {
   thumbRemove:    { position: 'absolute', top: '2px', right: '2px', width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(0,0,0,0.6)', color: 'white', border: 'none', cursor: 'pointer', fontSize: '12px', lineHeight: '18px', textAlign: 'center', padding: 0 },
 
   // Logo grid
-  logoGrid:       { display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', marginBottom: '10px' },
+  logoGrid:       { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '8px', marginBottom: '10px' },
+  logosLoading:   { display: 'flex', alignItems: 'center', gap: '10px', padding: '20px', background: '#f7f3ec', borderRadius: '8px', fontSize: '12px', color: '#afa99c' },
   logoCard:       { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', padding: '12px 8px', borderRadius: '8px', border: '1.5px solid #e8e5df', background: '#f7f3ec', cursor: 'pointer', transition: 'all 0.18s', position: 'relative', textAlign: 'center' },
   logoCardActive: { border: '1.5px solid #c9a44c', background: 'rgba(201,164,76,0.08)', boxShadow: '0 0 0 3px rgba(201,164,76,0.15)' },
   logoCardAuto:   { width: '40px', height: '40px', borderRadius: '6px', background: '#e8e5df', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', color: '#6b6558' },
