@@ -116,11 +116,7 @@ ${instruccionFoto}
 
 Devuelve EXACTAMENTE este JSON (sin markdown ni bloques de código):
 {
-  "variants": [
-    "Caption opción 1 — directo y claro, máx 220 caracteres, 2 emojis máx",
-    "Caption opción 2 — emocional y aspiracional, máx 220 caracteres, 2 emojis máx",
-    "Caption opción 3 — educativo con dato de valor, máx 220 caracteres, 2 emojis máx"
-  ],
+  "caption": "Un único caption final, listo para publicar — máx 220 caracteres, 2 emojis máx, tono ${tono}",
   "visual_prompt": "${hayImagenes
     ? "Descripción en inglés (60-90 palabras) de cómo usar la foto real adjunta como base. Indicar: mantener la fotografía original sin retoques digitales agresivos, construir composición con overlay tipográfico premium, paleta dorada y turquesa sutil, logo corporativo en esquina inferior derecha como marca de agua discreta a 15% opacidad. El resultado debe verse como fotografía clínica auténtica con diseño editorial superpuesto, no como imagen de stock."
     : "Descripción en inglés (60-90 palabras) para generador de imágenes. Estética clínica premium con paleta dorada y turquesa. Logo corporativo en esquina inferior derecha como marca de agua discreta."
@@ -130,7 +126,7 @@ Devuelve EXACTAMENTE este JSON (sin markdown ni bloques de código):
 }
 
 Reglas generales:
-- Las 3 variantes deben diferir en tono y estructura
+- Un solo caption, definitivo, sin variantes ni opciones alternativas
 - Hashtags populares en odontología latinoamericana
 - No mencionar que el contenido fue generado por IA
 - SOLO responde con el JSON válido`;
@@ -192,7 +188,7 @@ Reglas generales:
       continue;
     }
 
-    if (!Array.isArray(postData.variants) || postData.variants.length === 0) {
+    if (!postData.caption || typeof postData.caption !== "string" || !postData.caption.trim()) {
       ultimoError = "La IA devolvió datos incompletos.";
       continue;
     }

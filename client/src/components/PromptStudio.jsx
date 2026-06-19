@@ -75,7 +75,6 @@ const PromptStudio = ({ usuario, onSavePost }) => {
   const [logosCargando, setLogosCargando]   = useState(true);
   const [generando, setGenerando]           = useState(false);
   const [resultado, setResultado]           = useState(null);
-  const [selectedVariant, setSelectedVariant] = useState(0);
   const [copiedCaption, setCopiedCaption]   = useState(false);
   const [copiedPrompt, setCopiedPrompt]     = useState(false);
   const [errorIA, setErrorIA]               = useState(null);
@@ -173,7 +172,6 @@ Modo: ${mode}
       const data = await response.json();
       if (response.ok) {
         setResultado(data);
-        setSelectedVariant(0);
         setErrorIA(null);
       } else {
         setErrorIA(data.error || 'Error desconocido');
@@ -188,7 +186,6 @@ Modo: ${mode}
 
   const handleLimpiar = () => {
     setResultado(null);
-    setSelectedVariant(0);
     setSpecification('');
     setReferenceImages([]);
     setErrorIA(null);
@@ -196,7 +193,7 @@ Modo: ${mode}
   };
 
   const handleCopyCaption = () => {
-    const caption = resultado?.variants?.[selectedVariant];
+    const caption = resultado?.caption;
     if (caption) { navigator.clipboard.writeText(caption); setCopiedCaption(true); }
   };
 
@@ -207,7 +204,7 @@ Modo: ${mode}
   const handleSave = () => {
     if (!resultado) return;
     onSavePost({
-      caption: resultado.variants[selectedVariant],
+      caption: resultado.caption,
       visual_prompt: resultado.visual_prompt,
       hashtags: resultado.hashtags,
       compliance_notes: resultado.compliance_notes,
@@ -504,39 +501,110 @@ Modo: ${mode}
           <div style={s.emptyState}>
             <div style={s.emptyIcon}>✦</div>
             <p style={s.emptyText}>Genera un contenido para ver el borrador aquí.</p>
-            <p style={s.emptySubtext}>Recibirás 3 variantes de caption para elegir.</p>
+            <p style={s.emptySubtext}>Verás una vista previa lista para publicar.</p>
           </div>
         ) : resultado ? (
           <div style={s.result}>
 
-            {/* ── 3 VARIANTES DE CAPTION ── */}
+            {/* ── VISTA PREVIA DEL POST ── */}
             <div style={s.resultBlock}>
               <div style={s.resultLabelRow}>
-                <h3 style={s.h3}>CAPTION — ELIGE UNA VARIANTE</h3>
+                <h3 style={s.h3}>VISTA PREVIA — {channel.toUpperCase()}</h3>
                 <button onClick={handleCopyCaption} style={s.copyBtn}>
-                  {copiedCaption ? '✓ Copiado' : 'Copiar'}
+                  {copiedCaption ? '✓ Copiado' : 'Copiar caption'}
                 </button>
               </div>
-              <div style={s.variantsGrid}>
-                {resultado.variants?.map((v, i) => (
-                  <div
-                    key={i}
-                    style={{ ...s.variantCard, ...(selectedVariant === i ? s.variantCardActive : {}) }}
-                    onClick={() => setSelectedVariant(i)}
-                  >
-                    <div style={s.variantHeader}>
-                      <span style={{
-                        ...s.variantNum,
-                        ...(selectedVariant === i ? s.variantNumActive : {})
-                      }}>
-                        Opción {i + 1}
-                      </span>
-                      {selectedVariant === i && <span style={s.variantCheck}>✓ Seleccionada</span>}
+
+              {channel === 'WhatsApp Business' ? (
+                <div style={s.waCard}>
+                  <div style={s.waHeader}>
+                    <div style={s.socialAvatarWrap}>
+                      {getLogoForPrompt()?.file
+                        ? <img src={getLogoForPrompt().file} alt="" style={s.socialAvatar} onError={e => { e.currentTarget.style.visibility = 'hidden'; }} />
+                        : <span style={s.socialAvatarFallback}>DW</span>}
                     </div>
-                    <p style={s.variantText}>{v}</p>
+                    <div style={s.socialNames}>
+                      <strong style={s.socialUsername}>DentalWork</strong>
+                      <span style={s.socialSubname}>Cuenta de empresa</span>
+                    </div>
                   </div>
-                ))}
-              </div>
+                  <div style={s.waBubble}>
+                    <div style={s.socialImageWrap}>
+                      {referenceImages[0] ? (
+                        <img src={referenceImages[0].url} alt="preview" style={s.socialImage} />
+                      ) : (
+                        <div style={s.socialImagePlaceholder}>
+                          <span style={s.socialImagePlaceholderIcon}>✦</span>
+                          <span style={s.socialImagePlaceholderText}>Imagen generada con el prompt visual</span>
+                        </div>
+                      )}
+                    </div>
+                    <p style={s.waCaption}>{resultado.caption}</p>
+                    <p style={s.socialHashtags}>{resultado.hashtags?.map(h => `#${h}`).join(' ')}</p>
+                    <span style={s.waTime}>09:41 ✓✓</span>
+                  </div>
+                </div>
+              ) : (
+                <div style={s.socialCard}>
+                  <div style={s.socialHeader}>
+                    <div style={s.socialAvatarWrap}>
+                      {getLogoForPrompt()?.file
+                        ? <img src={getLogoForPrompt().file} alt="" style={s.socialAvatar} onError={e => { e.currentTarget.style.visibility = 'hidden'; }} />
+                        : <span style={s.socialAvatarFallback}>DW</span>}
+                    </div>
+                    <div style={s.socialNames}>
+                      <strong style={s.socialUsername}>dentalworkcol</strong>
+                      <span style={s.socialSubname}>
+                        {channel === 'Facebook' ? 'DentalWork · Hace unos segundos · 🌐' : 'Dra. Jenniffer Espinosa'}
+                      </span>
+                    </div>
+                    <span style={s.socialDots}>•••</span>
+                  </div>
+
+                  {channel === 'Facebook' && (
+                    <p style={{ ...s.socialCaption, padding: '0 14px 10px' }}>{resultado.caption}</p>
+                  )}
+
+                  <div style={s.socialImageWrap}>
+                    {referenceImages[0] ? (
+                      <img src={referenceImages[0].url} alt="preview" style={s.socialImage} />
+                    ) : (
+                      <div style={s.socialImagePlaceholder}>
+                        <span style={s.socialImagePlaceholderIcon}>✦</span>
+                        <span style={s.socialImagePlaceholderText}>Imagen generada con el prompt visual</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {channel === 'Facebook' ? (
+                    <div style={s.fbActions}>
+                      <span style={s.fbActionItem}>👍 Me gusta</span>
+                      <span style={s.fbActionItem}>💬 Comentar</span>
+                      <span style={s.fbActionItem}>↗ Compartir</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={s.socialActions}>
+                        <span style={s.socialIcon}>♡</span>
+                        <span style={s.socialIcon}>💬</span>
+                        <span style={s.socialIcon}>↗</span>
+                        <span style={{ ...s.socialIcon, marginLeft: 'auto' }}>⚑</span>
+                      </div>
+                      <p style={s.socialLikes}>Le gusta a <strong>jenniffer.espinosa</strong> y otras personas</p>
+                      <p style={s.socialCaption}>
+                        <strong>dentalworkcol</strong>{' '}{resultado.caption}
+                      </p>
+                      <p style={s.socialHashtags}>{resultado.hashtags?.map(h => `#${h}`).join(' ')}</p>
+                    </>
+                  )}
+
+                  {channel === 'Facebook' && (
+                    <p style={{ ...s.socialHashtags, padding: '0 14px 12px' }}>
+                      {resultado.hashtags?.map(h => `#${h}`).join(' ')}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* ── PROMPT VISUAL ── */}
@@ -661,15 +729,35 @@ const s = {
   resultText:     { fontSize: '13.5px', lineHeight: '1.65', color: '#0c0c0c', background: '#f7f3ec', padding: '12px 14px', borderRadius: '7px', margin: 0 },
   copyBtn:        { fontSize: '11px', fontWeight: '600', padding: '5px 12px', borderRadius: '20px', border: '1px solid #c9a44c', background: 'transparent', color: '#9c7b2e', cursor: 'pointer', whiteSpace: 'nowrap' },
 
-  // 3 Variants
-  variantsGrid:   { display: 'flex', flexDirection: 'column', gap: '8px' },
-  variantCard:    { padding: '14px 16px', borderRadius: '8px', border: '1.5px solid #e8e5df', background: '#fdfcfa', cursor: 'pointer', transition: 'all 0.15s' },
-  variantCardActive: { border: '1.5px solid #c9a44c', background: 'rgba(201,164,76,0.05)' },
-  variantHeader:  { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' },
-  variantNum:     { fontSize: '10px', fontWeight: '700', letterSpacing: '0.1em', color: '#afa99c', textTransform: 'uppercase' },
-  variantNumActive: { color: '#9c7b2e' },
-  variantCheck:   { fontSize: '10px', fontWeight: '700', color: '#9c7b2e', background: 'rgba(201,164,76,0.15)', padding: '2px 8px', borderRadius: '10px' },
-  variantText:    { fontSize: '13px', lineHeight: '1.6', color: '#3a3630', margin: 0 },
+  // Vista previa social (Instagram / Facebook)
+  socialCard:     { border: '1px solid #e8e5df', borderRadius: '10px', overflow: 'hidden', background: 'white' },
+  socialHeader:   { display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px' },
+  socialAvatarWrap: { width: '34px', height: '34px', borderRadius: '50%', overflow: 'hidden', background: 'linear-gradient(135deg,#c9a44c,#2a6e68)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  socialAvatar:   { width: '100%', height: '100%', objectFit: 'cover' },
+  socialAvatarFallback: { color: 'white', fontSize: '11px', fontWeight: '700' },
+  socialNames:    { display: 'flex', flexDirection: 'column', lineHeight: 1.25, flex: 1, minWidth: 0 },
+  socialUsername: { fontSize: '13px', color: '#0c0c0c' },
+  socialSubname:  { fontSize: '11px', color: '#afa99c' },
+  socialDots:     { fontSize: '14px', color: '#afa99c', letterSpacing: '1px' },
+  socialImageWrap:{ width: '100%', aspectRatio: '1 / 1', background: '#f7f3ec' },
+  socialImage:    { width: '100%', height: '100%', objectFit: 'cover', display: 'block' },
+  socialImagePlaceholder: { width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg,#fdfaf4,#f0ece2)' },
+  socialImagePlaceholderIcon: { fontSize: '22px', color: '#c9a44c' },
+  socialImagePlaceholderText: { fontSize: '11px', color: '#afa99c', textAlign: 'center', padding: '0 30px' },
+  socialActions:  { display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 14px 4px' },
+  socialIcon:     { fontSize: '19px', color: '#3a3630' },
+  socialLikes:    { fontSize: '12.5px', color: '#3a3630', margin: '4px 14px 0' },
+  socialCaption:  { fontSize: '13px', lineHeight: '1.5', color: '#3a3630', margin: '6px 14px 0', background: 'transparent', padding: 0 },
+  socialHashtags: { fontSize: '12.5px', color: '#2a6e68', margin: '4px 14px 14px' },
+  fbActions:      { display: 'flex', justifyContent: 'space-around', borderTop: '1px solid #e8e5df', borderBottom: '1px solid #e8e5df', margin: '10px 0 0', padding: '8px 0' },
+  fbActionItem:   { fontSize: '12.5px', fontWeight: '600', color: '#6b6558' },
+
+  // Vista previa WhatsApp Business
+  waCard:         { display: 'flex', flexDirection: 'column', gap: '10px', background: '#e9ddc8', borderRadius: '10px', padding: '14px' },
+  waHeader:       { display: 'flex', alignItems: 'center', gap: '10px' },
+  waBubble:       { background: 'white', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' },
+  waCaption:      { fontSize: '13px', lineHeight: '1.5', color: '#3a3630', margin: '10px 14px 0' },
+  waTime:         { display: 'block', fontSize: '10px', color: '#afa99c', textAlign: 'right', margin: '6px 14px 12px' },
 
   // Hashtags
   hashtags:       { display: 'flex', gap: '8px', flexWrap: 'wrap' },
