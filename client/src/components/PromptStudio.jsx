@@ -244,7 +244,7 @@ const PromptStudio = ({ usuario, onSavePost }) => {
             <button onClick={handleGenerate} disabled={generando} style={s.primaryBtn}>
               {generando ? 'GENERANDO...' : 'Generar'}
             </button>
-            <button onClick={() => {}} style={s.ghostBtn}>Limpiar</button>
+            <button onClick={() => { setResultado(null); setUserText(""); setSpecification(""); setReferenceImages([]); }} style={s.ghostBtn}>Limpiar</button>
           </div>
         </div>
       </section>
@@ -256,7 +256,7 @@ const PromptStudio = ({ usuario, onSavePost }) => {
             <p style={s.eyebrow}>SALIDA</p>
             <h2 style={s.h2}>Borrador</h2>
           </div>
-          <div style={s.badge}>Gemini 1.5 Flash (Stable)</div>
+          <div style={s.badge}>Gemini 2.5 Flash</div>
         </div>
 
         {!resultado ? (
@@ -283,7 +283,7 @@ const PromptStudio = ({ usuario, onSavePost }) => {
             </div>
             <div style={s.actions}>
               <button onClick={() => onSavePost(resultado)} style={s.primaryBtn}>Guardar borrador</button>
-              <button onClick={() => {}} style={s.ghostBtn}>Copiar caption</button>
+              <button onClick={() => { if(resultado?.caption){ navigator.clipboard.writeText(resultado.caption); alert("Caption copiado ✓"); } }} style={s.ghostBtn}>Copiar caption</button>
             </div>
           </div>
         )}
