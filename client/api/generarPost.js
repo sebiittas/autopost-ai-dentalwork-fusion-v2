@@ -1,6 +1,65 @@
 // client/api/generarPost.js
-// Gemini 2.5 Flash — Multimodal + 3 variantes de caption
+// Gemini 2.5 Flash — con reintentos automáticos y modelo de respaldo
 
+// ── MODELOS en orden de preferencia ─────────────────────────────────────────
+const MODELOS = [
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-1.5-flash",
+  "gemini-1.5-flash-8b",
+];
+
+const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
+const MAX_REINTENTOS = 2;      // reintentos por modelo ante 503/429
+const ESPERA_MS      = 1500;   // espera entre reintentos
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// ── Llamada a un modelo específico ──────────────────────────────────────────
+async function llamarGemini(modelo, parts, apiKey) {
+  const url = `${GEMINI_BASE}/${modelo}:generateContent`;
+  const body = {
+    contents: [{ parts }],
+    generationConfig: {
+      temperature: 0.82,
+      topK: 40,
+      topP: 0.95,
+      maxOutputTokens: 1500,
+    },
+  };
+
+  for (let intento = 1; intento <= MAX_REINTENTOS; intento++) {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
+      },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) return { ok: true, data };
+
+    const status  = res.status;
+    const mensaje = data?.error?.message || "";
+
+    // 503 / 429 → modelo saturado, reintentar o pasar al siguiente
+    if ((status === 503 || status === 429) && intento < MAX_REINTENTOS) {
+      console.warn(`[${modelo}] intento ${intento} → ${status}. Esperando ${ESPERA_MS}ms...`);
+      await sleep(ESPERA_MS);
+      continue;
+    }
+
+    // Otro error → no reintentar este modelo
+    return { ok: false, status, mensaje };
+  }
+
+  return { ok: false, status: 503, mensaje: "Modelo sin respuesta tras reintentos" };
+}
+
+// ── Handler principal ────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Método no permitido" });
@@ -19,6 +78,7 @@ export default async function handler(req, res) {
     });
   }
 
+  // ── Prompt ────────────────────────────────────────────────────────────────
   const tonosDescripcion = {
     casual:     "amigable, cercano, como si hablaras con un amigo. Usa lenguaje natural latinoamericano.",
     formal:     "profesional, serio, para una empresa o marca corporativa.",
@@ -26,10 +86,9 @@ export default async function handler(req, res) {
     inspirador: "motivador, positivo, que genere emoción y querer actuar.",
   };
 
-  const tonoTexto = tonosDescripcion[tono] || tonosDescripcion.formal;
+  const tonoTexto   = tonosDescripcion[tono] || tonosDescripcion.formal;
   const hayImagenes = Array.isArray(images) && images.length > 0;
 
-  // ── INSTRUCCIÓN CRÍTICA DE FOTOGRAFÍA REAL ──────────────────────────────
   const instruccionFoto = hayImagenes ? `
 INSTRUCCIÓN CRÍTICA SOBRE LAS IMÁGENES ADJUNTAS:
 Las imágenes enviadas son fotografías clínicas REALES tomadas en el consultorio.
@@ -76,7 +135,7 @@ Reglas generales:
 - No mencionar que el contenido fue generado por IA
 - SOLO responde con el JSON válido`;
 
-  // ── CONSTRUIR PARTES DEL MENSAJE (multimodal) ───────────────────────────
+  // ── Construir partes del mensaje (multimodal) ────────────────────────────
   const parts = [];
 
   if (hayImagenes) {
@@ -93,39 +152,34 @@ Reglas generales:
 
   parts.push({ text: prompt });
 
-  try {
-    const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": GEMINI_API_KEY,
-        },
-        body: JSON.stringify({
-          contents: [{ parts }],
-          generationConfig: {
-            temperature: 0.82,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1500,
-          },
-        }),
-      }
-    );
+  // ── Iterar por modelos hasta encontrar uno disponible ───────────────────
+  let ultimoError = "Todos los modelos de IA están ocupados en este momento.";
 
-    const data = await response.json();
+  for (const modelo of MODELOS) {
+    console.log(`[generarPost] Intentando con modelo: ${modelo}`);
+    let resultado;
 
-    if (!response.ok) {
-      console.error("Error de Gemini API:", data);
-      return res.status(500).json({
-        error: `Error de la IA: ${data.error?.message || JSON.stringify(data)}`,
-      });
+    try {
+      resultado = await llamarGemini(modelo, parts, GEMINI_API_KEY);
+    } catch (err) {
+      console.error(`[${modelo}] Error de red:`, err.message);
+      ultimoError = "Error de conexión con la IA.";
+      continue;
     }
 
-    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    if (!resultado.ok) {
+      console.warn(`[${modelo}] Falló con ${resultado.status}: ${resultado.mensaje}`);
+      ultimoError = resultado.mensaje;
+      continue; // probar siguiente modelo
+    }
+
+    // ✅ Respuesta exitosa
+    const responseText =
+      resultado.data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+
     if (!responseText) {
-      return res.status(500).json({ error: "La IA no devolvió una respuesta válida." });
+      ultimoError = "La IA no devolvió texto.";
+      continue;
     }
 
     let postData;
@@ -133,18 +187,23 @@ Reglas generales:
       const clean = responseText.replace(/```json|```/g, "").trim();
       postData = JSON.parse(clean);
     } catch (_) {
-      console.error("JSON parse error:", responseText);
-      return res.status(500).json({ error: "La IA devolvió un formato inválido. Intenta de nuevo." });
+      console.error(`[${modelo}] JSON inválido:`, responseText.slice(0, 200));
+      ultimoError = "La IA devolvió un formato inválido.";
+      continue;
     }
 
     if (!Array.isArray(postData.variants) || postData.variants.length === 0) {
-      return res.status(500).json({ error: "La IA devolvió datos incompletos." });
+      ultimoError = "La IA devolvió datos incompletos.";
+      continue;
     }
 
+    // Agregar qué modelo respondió (útil para debug)
+    postData._modelo = modelo;
     return res.status(200).json(postData);
-
-  } catch (err) {
-    console.error("Error de red:", err);
-    return res.status(500).json({ error: "No se pudo conectar con la IA. Intenta de nuevo." });
   }
+
+  // Todos los modelos fallaron
+  return res.status(503).json({
+    error: `Los modelos de IA están saturados en este momento. Por favor intenta en unos segundos. (${ultimoError})`,
+  });
 }

@@ -78,6 +78,7 @@ const PromptStudio = ({ usuario, onSavePost }) => {
   const [selectedVariant, setSelectedVariant] = useState(0);
   const [copiedCaption, setCopiedCaption]   = useState(false);
   const [copiedPrompt, setCopiedPrompt]     = useState(false);
+  const [errorIA, setErrorIA]               = useState(null);
   const fileInputRef                        = useRef(null);
 
   // Cargar logos dinámicamente desde la API
@@ -85,7 +86,7 @@ const PromptStudio = ({ usuario, onSavePost }) => {
     const cargarLogos = async () => {
       setLogosCargando(true);
       try {
-        const res = await fetch('/api/logos');
+        const res = await fetch('/logos.json');
         if (res.ok) {
           const data = await res.json();
           if (data.logos && data.logos.length > 0) {
@@ -173,11 +174,12 @@ Modo: ${mode}
       if (response.ok) {
         setResultado(data);
         setSelectedVariant(0);
+        setErrorIA(null);
       } else {
-        alert('Error: ' + data.error);
+        setErrorIA(data.error || 'Error desconocido');
       }
     } catch (err) {
-      alert('Error de conexión con la IA');
+      setErrorIA('No se pudo conectar con la IA. Verifica tu conexión.');
       console.error(err);
     } finally {
       setGenerando(false);
@@ -189,6 +191,7 @@ Modo: ${mode}
     setSelectedVariant(0);
     setSpecification('');
     setReferenceImages([]);
+    setErrorIA(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -475,16 +478,35 @@ Modo: ${mode}
             <p style={s.eyebrow}>SALIDA</p>
             <h2 style={s.h2}>Borrador</h2>
           </div>
-          <div style={s.badge}>Gemini 2.5 Flash</div>
+          <div style={s.badge}>
+            {resultado?._modelo ? resultado._modelo : 'Gemini 2.5 Flash'}
+          </div>
         </div>
 
-        {!resultado ? (
+        {/* ── BANNER DE ERROR ── */}
+        {errorIA && (
+          <div style={s.errorBanner}>
+            <div style={s.errorIcon}>⚠</div>
+            <div style={s.errorBody}>
+              <strong style={s.errorTitle}>La IA no pudo responder</strong>
+              <p style={s.errorMsg}>{errorIA}</p>
+              <p style={s.errorHint}>
+                Los modelos se intentaron en cascada. Espera unos segundos y vuelve a intentar.
+              </p>
+            </div>
+            <button onClick={handleGenerate} disabled={generando} style={s.retryBtn}>
+              {generando ? '...' : '↻ Reintentar'}
+            </button>
+          </div>
+        )}
+
+        {!resultado && !errorIA ? (
           <div style={s.emptyState}>
             <div style={s.emptyIcon}>✦</div>
             <p style={s.emptyText}>Genera un contenido para ver el borrador aquí.</p>
             <p style={s.emptySubtext}>Recibirás 3 variantes de caption para elegir.</p>
           </div>
-        ) : (
+        ) : resultado ? (
           <div style={s.result}>
 
             {/* ── 3 VARIANTES DE CAPTION ── */}
@@ -564,7 +586,7 @@ Modo: ${mode}
               </button>
             </div>
           </div>
-        )}
+        ) : null}
       </section>
     </div>
   );
@@ -658,6 +680,15 @@ const s = {
   emptyIcon:      { fontSize: '28px', color: '#c9a44c', opacity: 0.5 },
   emptyText:      { fontSize: '14px', color: '#6b6558', textAlign: 'center', margin: 0 },
   emptySubtext:   { fontSize: '12px', color: '#afa99c', textAlign: 'center', margin: 0 },
+
+  // Error banner
+  errorBanner:    { display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '16px 18px', background: '#fff8f0', border: '1.5px solid #f5c28a', borderRadius: '10px', marginBottom: '4px' },
+  errorIcon:      { fontSize: '20px', color: '#d97706', flexShrink: 0, marginTop: '2px' },
+  errorBody:      { flex: 1 },
+  errorTitle:     { fontSize: '13px', fontWeight: '700', color: '#92400e', display: 'block', marginBottom: '4px' },
+  errorMsg:       { fontSize: '12px', color: '#78350f', margin: '0 0 4px 0', lineHeight: 1.5 },
+  errorHint:      { fontSize: '11px', color: '#b45309', margin: 0, opacity: 0.8 },
+  retryBtn:       { flexShrink: 0, padding: '8px 14px', background: '#d97706', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', whiteSpace: 'nowrap' },
 };
 
 export default PromptStudio;

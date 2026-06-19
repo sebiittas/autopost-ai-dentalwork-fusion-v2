@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/generate-logos.js && vite",
     "build": "vite build",
+    "prebuild": "node scripts/generate-logos.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },

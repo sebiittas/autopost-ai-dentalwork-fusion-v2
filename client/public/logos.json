@@ -1,0 +1,354 @@
+{
+  "logos": [
+    {
+      "id": "logo-12",
+      "label": "logo BLANCO",
+      "file": "/logos/logo%20BLANCO%20.png",
+      "fileRaw": "logo BLANCO .png",
+      "ext": "png",
+      "tipo": "claro",
+      "usage": "Sobre fondos oscuros",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-13",
+      "label": "logo BLANCO CON JENNIFFER",
+      "file": "/logos/logo%20BLANCO%20CON%20JENNIFFER%20.png",
+      "fileRaw": "logo BLANCO CON JENNIFFER .png",
+      "ext": "png",
+      "tipo": "claro",
+      "usage": "Sobre fondos oscuros",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-33",
+      "label": "plantilla blanco",
+      "file": "/logos/plantilla%20blanco.png",
+      "fileRaw": "plantilla blanco.png",
+      "ext": "png",
+      "tipo": "claro",
+      "usage": "Sobre fondos oscuros",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-30",
+      "label": "logos negro 07",
+      "file": "/logos/logos%20negro-07.png",
+      "fileRaw": "logos negro-07.png",
+      "ext": "png",
+      "tipo": "oscuro",
+      "usage": "Sobre fondos claros",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-34",
+      "label": "plantilla negro",
+      "file": "/logos/plantilla%20negro.png",
+      "fileRaw": "plantilla negro.png",
+      "ext": "png",
+      "tipo": "oscuro",
+      "usage": "Sobre fondos claros",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-20",
+      "label": "logos Jenn firma 2 04",
+      "file": "/logos/logos%20Jenn%20firma%202-04.png",
+      "fileRaw": "logos Jenn firma 2-04.png",
+      "ext": "png",
+      "tipo": "firma",
+      "usage": "Firma o pie de imagen",
+      "position": "bottom-right"
+    },
+    {
+      "id": "logo-21",
+      "label": "logos Jenn firma 2 09",
+      "file": "/logos/logos%20Jenn%20firma%202-09.png",
+      "fileRaw": "logos Jenn firma 2-09.png",
+      "ext": "png",
+      "tipo": "firma",
+      "usage": "Firma o pie de imagen",
+      "position": "bottom-right"
+    },
+    {
+      "id": "logo-22",
+      "label": "logos Jenn firma 2 10",
+      "file": "/logos/logos%20Jenn%20firma%202-10.png",
+      "fileRaw": "logos Jenn firma 2-10.png",
+      "ext": "png",
+      "tipo": "firma",
+      "usage": "Firma o pie de imagen",
+      "position": "bottom-right"
+    },
+    {
+      "id": "logo-23",
+      "label": "logos Jenn firma 04",
+      "file": "/logos/logos%20Jenn%20firma-04.png",
+      "fileRaw": "logos Jenn firma-04.png",
+      "ext": "png",
+      "tipo": "firma",
+      "usage": "Firma o pie de imagen",
+      "position": "bottom-right"
+    },
+    {
+      "id": "logo-24",
+      "label": "logos Jenn firma 09",
+      "file": "/logos/logos%20Jenn%20firma-09.png",
+      "fileRaw": "logos Jenn firma-09.png",
+      "ext": "png",
+      "tipo": "firma",
+      "usage": "Firma o pie de imagen",
+      "position": "bottom-right"
+    },
+    {
+      "id": "logo-25",
+      "label": "logos Jenn firma 10",
+      "file": "/logos/logos%20Jenn%20firma-10.png",
+      "fileRaw": "logos Jenn firma-10.png",
+      "ext": "png",
+      "tipo": "firma",
+      "usage": "Firma o pie de imagen",
+      "position": "bottom-right"
+    },
+    {
+      "id": "logo-0",
+      "label": "Captura de pantalla 2023 11 30 a la(s) 11.51.26#U202fa.#U00a0m.",
+      "file": "/logos/Captura%20de%20pantalla%202023-11-30%20a%20la(s)%2011.51.26%23U202fa.%23U00a0m..png",
+      "fileRaw": "Captura de pantalla 2023-11-30 a la(s) 11.51.26#U202fa.#U00a0m..png",
+      "ext": "png",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-1",
+      "label": "FOTO PERFIL FACEBOOK",
+      "file": "/logos/FOTO%20PERFIL%20FACEBOOK.jpg",
+      "fileRaw": "FOTO PERFIL FACEBOOK.jpg",
+      "ext": "jpg",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-2",
+      "label": "Logo Jenniffer 2023 Mesa de trabajo 1 copia 2",
+      "file": "/logos/Logo%20Jenniffer%202023_Mesa%20de%20trabajo%201%20copia%202.png",
+      "fileRaw": "Logo Jenniffer 2023_Mesa de trabajo 1 copia 2.png",
+      "ext": "png",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-3",
+      "label": "Logo Jenniffer 2023 Mesa de trabajo 1 copia 3",
+      "file": "/logos/Logo%20Jenniffer%202023_Mesa%20de%20trabajo%201%20copia%203.png",
+      "fileRaw": "Logo Jenniffer 2023_Mesa de trabajo 1 copia 3.png",
+      "ext": "png",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-4",
+      "label": "Logo Jenniffer 2023 Mesa de trabajo 1 copia",
+      "file": "/logos/Logo%20Jenniffer%202023_Mesa%20de%20trabajo%201%20copia.png",
+      "fileRaw": "Logo Jenniffer 2023_Mesa de trabajo 1 copia.png",
+      "ext": "png",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-5",
+      "label": "Logo Jenniffer 2023 Mesa de trabajo 1",
+      "file": "/logos/Logo%20Jenniffer%202023_Mesa%20de%20trabajo%201.png",
+      "fileRaw": "Logo Jenniffer 2023_Mesa de trabajo 1.png",
+      "ext": "png",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-6",
+      "label": "Mesa de trabajo 26",
+      "file": "/logos/Mesa%20de%20trabajo%2026.png",
+      "fileRaw": "Mesa de trabajo 26.png",
+      "ext": "png",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-7",
+      "label": "Mesa de trabajo 27",
+      "file": "/logos/Mesa%20de%20trabajo%2027.png",
+      "fileRaw": "Mesa de trabajo 27.png",
+      "ext": "png",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-8",
+      "label": "Mesa de trabajo 28 copia",
+      "file": "/logos/Mesa%20de%20trabajo%2028%20copia.png",
+      "fileRaw": "Mesa de trabajo 28 copia.png",
+      "ext": "png",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-9",
+      "label": "Mesa de trabajo 28",
+      "file": "/logos/Mesa%20de%20trabajo%2028.png",
+      "fileRaw": "Mesa de trabajo 28.png",
+      "ext": "png",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-10",
+      "label": "PLOTTER 2 03",
+      "file": "/logos/PLOTTER%202-03.png",
+      "fileRaw": "PLOTTER 2-03.png",
+      "ext": "png",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-11",
+      "label": "PORTADA FANPAGE",
+      "file": "/logos/PORTADA%20FANPAGE.jpg",
+      "fileRaw": "PORTADA FANPAGE.jpg",
+      "ext": "jpg",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-14",
+      "label": "logo dentalink",
+      "file": "/logos/logo%20dentalink.jpg",
+      "fileRaw": "logo dentalink.jpg",
+      "ext": "jpg",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-15",
+      "label": "logo inicial",
+      "file": "/logos/logo%20inicial.png",
+      "fileRaw": "logo inicial.png",
+      "ext": "png",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-16",
+      "label": "logo pad mouse 02",
+      "file": "/logos/logo%20pad%20mouse-02.png",
+      "fileRaw": "logo pad mouse-02.png",
+      "ext": "png",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-17",
+      "label": "logo pad mouse 03",
+      "file": "/logos/logo%20pad%20mouse-03.png",
+      "fileRaw": "logo pad mouse-03.png",
+      "ext": "png",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-18",
+      "label": "logo recepcion editable 11 sept",
+      "file": "/logos/logo%20recepcion%20editable%2011%20sept.png",
+      "fileRaw": "logo recepcion editable 11 sept.png",
+      "ext": "png",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-19",
+      "label": "logo recepcion editable 30 NOV",
+      "file": "/logos/logo%20recepcion%20editable%2030%20NOV.jpg",
+      "fileRaw": "logo recepcion editable 30 NOV.jpg",
+      "ext": "jpg",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-26",
+      "label": "logos Jenn na 03",
+      "file": "/logos/logos%20Jenn%20na-03.png",
+      "fileRaw": "logos Jenn na-03.png",
+      "ext": "png",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-27",
+      "label": "logos Jenn na 04",
+      "file": "/logos/logos%20Jenn%20na-04.png",
+      "fileRaw": "logos Jenn na-04.png",
+      "ext": "png",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-28",
+      "label": "logos Jenn 03",
+      "file": "/logos/logos%20Jenn-03.png",
+      "fileRaw": "logos Jenn-03.png",
+      "ext": "png",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-29",
+      "label": "logos Jenn 04",
+      "file": "/logos/logos%20Jenn-04.png",
+      "fileRaw": "logos Jenn-04.png",
+      "ext": "png",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-31",
+      "label": "pared 07",
+      "file": "/logos/pared-07.png",
+      "fileRaw": "pared-07.png",
+      "ext": "png",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    },
+    {
+      "id": "logo-32",
+      "label": "pared 08",
+      "file": "/logos/pared-08.png",
+      "fileRaw": "pared-08.png",
+      "ext": "png",
+      "tipo": "general",
+      "usage": "Uso general",
+      "position": "bottom-center"
+    }
+  ]
+}
