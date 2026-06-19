@@ -256,7 +256,7 @@ const PromptStudio = ({ usuario, onSavePost }) => {
             <p style={s.eyebrow}>SALIDA</p>
             <h2 style={s.h2}>Borrador</h2>
           </div>
-          <div style={s.badge}>Gemini 3.5 Flash</div>
+          <div style={s.badge}>Gemini 1.5 Flash (Stable)</div>
         </div>
 
         {!resultado ? (
