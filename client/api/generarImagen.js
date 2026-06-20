@@ -3,14 +3,21 @@
 // modelos de generación de imagen de Gemini ("Nano Banana"), con cascada
 // de respaldo igual que generarPost.js.
 
+// IMPORTANTE: "gemini-3.1-flash-image" (sin "-preview") NO existe — por eso
+// fallaba. El nombre real del modelo es "gemini-3.1-flash-image-preview".
+// "gemini-2.0-flash-preview-image-generation" fue retirado por Google y se
+// reemplaza por "gemini-3-pro-image-preview" (Nano Banana Pro) como tercer
+// respaldo de mayor calidad. Verificado contra la documentación oficial de
+// Gemini API (ai.google.dev/gemini-api/docs/image-generation), junio 2026.
 const MODELOS_IMAGEN = [
-  "gemini-2.5-flash-image",  // Nano Banana — rápido y económico
-  "gemini-3.1-flash-image",  // Nano Banana 2 — más nuevo, respaldo
-   "gemini-2.0-flash-preview-image-generation",
+  "gemini-2.5-flash-image",          // Nano Banana — rápido y económico
+  "gemini-3.1-flash-image-preview",  // Nano Banana 2 — más nuevo, respaldo
+  "gemini-3-pro-image-preview",      // Nano Banana Pro — mayor calidad, último respaldo
 ];
 
- const GEMINI_BASE =
+const GEMINI_BASE =
   "https://generativelanguage.googleapis.com/v1beta/models";
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Método no permitido" });

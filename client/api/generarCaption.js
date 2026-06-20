@@ -73,51 +73,63 @@ Reglas:
 
   const prompt = extendido ? promptExtendido : promptBase;
 
-  try {
-    const MODELOS = [
-  "gemini-2.5-flash",
-  "gemini-2.5-flash-lite"
-];
+  // IMPORTANTE: este archivo tenía un bug — usaba variables `apiKey` y
+  // `options` que nunca se definían en este scope (siempre lanzaba
+  // ReferenceError, sin importar el modelo). Se corrige usando
+  // GEMINI_API_KEY (ya validado arriba) y construyendo el body explícito,
+  // igual que en generarPost.js. También se quita "gemini-3.5-flash" por no
+  // ser un nombre de modelo público confirmado.
+  const MODELOS = ["gemini-2.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"];
 
-let response = null;
-let data = null;
-let ultimoError = null;
+  let data = null;
+  let ultimoError = null;
 
-for (const modelo of MODELOS) {
-  try {
-    response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${apiKey}`,
-      options
-    );
+  for (const modelo of MODELOS) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": GEMINI_API_KEY,
+          },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.8,
+              topK: 40,
+              topP: 0.95,
+              maxOutputTokens: 1024,
+            },
+          }),
+        }
+      );
 
-    if (!response.ok) {
-      ultimoError = await response.text();
-      continue;
+      const responseJson = await response.json();
+
+      if (!response.ok) {
+        ultimoError = responseJson?.error?.message || `Error ${response.status}`;
+        console.warn(`[${modelo}] Falló: ${ultimoError}`);
+        continue;
+      }
+
+      data = responseJson;
+      console.log(`Modelo usado: ${modelo}`);
+      break;
+    } catch (error) {
+      ultimoError = error.message;
+      console.error(`[${modelo}] Error de red:`, ultimoError);
     }
-
-    data = await response.json();
-
-    console.log(`Modelo usado: ${modelo}`);
-
-    break;
-  } catch (error) {
-    ultimoError = error;
   }
-}
 
-if (!data) {
-  throw new Error(
-    `No fue posible generar el contenido. ${ultimoError}`
-  );
-}
+  if (!data) {
+    return res.status(503).json({
+      error: `No fue posible generar el contenido. (${ultimoError})`,
+    });
+  }
 
-    if (!response.ok) {
-      console.error("Error de Gemini API:", data);
-      return res.status(500).json({ 
-        error: `Error de la IA: ${data.error?.message || JSON.stringify(data)}` 
-      });
-    }
-
+  try {
     const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
     if (!responseText) {
@@ -129,10 +141,11 @@ if (!data) {
       return res.status(200).json({ caption: responseText });
     }
 
-    // Si es modo extendido, parsear JSON
+    // Si es modo extendido, parsear JSON (quitando posibles fences ```json)
     let postData;
     try {
-      postData = JSON.parse(responseText);
+      const clean = responseText.replace(/```json|```/g, "").trim();
+      postData = JSON.parse(clean);
     } catch (parseError) {
       console.error("Error al parsear JSON de Gemini:", responseText);
       return res.status(500).json({ 

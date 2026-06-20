@@ -4,12 +4,13 @@
 // ── MODELOS en orden de preferencia ─────────────────────────────────────────
 // IMPORTANTE: gemini-1.5-flash, gemini-2.0-flash y gemini-2.0-flash-lite
 // fueron retirados por Google (shut down) — ya no existen en v1beta.
-// Lista actualizada con los modelos estables vigentes (junio 2026).
+// "gemini-3.5-flash" NO es un nombre de modelo público confirmado en la
+// documentación oficial de Gemini API — se quitó para evitar otro 404.
+// Lista verificada contra ai.google.dev/gemini-api/docs/models (junio 2026).
 const MODELOS = [
   "gemini-2.5-flash",
-  "gemini-2.5-flash-lite",
-  "gemini-3.5-flash",
   "gemini-3.1-flash-lite",
+  "gemini-2.5-flash-lite",
 ];
 
 const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
