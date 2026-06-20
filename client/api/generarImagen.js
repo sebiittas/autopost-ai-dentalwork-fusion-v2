@@ -6,10 +6,11 @@
 const MODELOS_IMAGEN = [
   "gemini-2.5-flash-image",  // Nano Banana — rápido y económico
   "gemini-3.1-flash-image",  // Nano Banana 2 — más nuevo, respaldo
+   "gemini-2.0-flash-preview-image-generation",
 ];
 
-const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1/models";
-
+ const GEMINI_BASE =
+  "https://generativelanguage.googleapis.com/v1beta/models";
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Método no permitido" });
@@ -49,25 +50,23 @@ export default async function handler(req, res) {
     console.log(`[generarImagen] Intentando con modelo: ${modelo}`);
 
     try {
-      const response = await fetch(`${GEMINI_BASE}/${modelo}:generateContent`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": GEMINI_API_KEY,
+const response = await fetch(
+  `${GEMINI_BASE}/${modelo}:generateContent`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": GEMINI_API_KEY,
+    },
+    body: JSON.stringify({
+      contents: [
+        {
+          parts,
         },
-        body: JSON.stringify({
-          contents: [{ parts }],
-          generationConfig: {
-            responseModalities: ["IMAGE"],
-            responseFormat: {
-              image: {
-                aspectRatio: aspectRatio || "1:1",
-                imageSize: "1K",
-              },
-            },
-          },
-        }),
-      });
+      ],
+    }),
+  }
+);
 
       const data = await response.json();
 
