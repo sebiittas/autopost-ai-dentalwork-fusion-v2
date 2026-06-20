@@ -15,6 +15,7 @@ import {
 export const crearPost = async (texto, usuario, fechaProgramada = null, extra = {}) => {
   return await addDoc(collection(db, "posts"), {
     texto,
+    image: extra.image || null,
     caption: extra.caption || texto,
     visual_prompt: extra.visual_prompt || "",
     hashtags: Array.isArray(extra.hashtags) ? extra.hashtags : [],

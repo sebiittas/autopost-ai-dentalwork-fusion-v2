@@ -271,15 +271,31 @@ Modo: ${mode}
     if (resultado?.visual_prompt) { navigator.clipboard.writeText(resultado.visual_prompt); setCopiedPrompt(true); }
   };
 
-  const handleSave = () => {
-    if (!resultado) return;
-    onSavePost({
-      caption: resultado.caption,
-      visual_prompt: resultado.visual_prompt,
-      hashtags: resultado.hashtags,
-      compliance_notes: resultado.compliance_notes,
-    });
-  };
+const handleSave = () => {
+  if (!resultado) return;
+
+  onSavePost({
+    caption: resultado.caption,
+    visual_prompt: resultado.visual_prompt,
+    hashtags: resultado.hashtags,
+    compliance_notes: resultado.compliance_notes,
+    image: imagenGenerada,
+  });
+};
+
+const descargarImagen = () => {
+  if (!imagenGenerada) return;
+
+  const link = document.createElement("a");
+
+  link.href = imagenGenerada;
+  link.download = `post-${Date.now()}.png`;
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
 
   // ── Qué mostrar en el área de imagen del mockup ──────────────────────────
   // Prioridad normal: imagen compuesta por IA (foto real + logo + diseño)
@@ -643,6 +659,11 @@ Modo: ${mode}
                 <button onClick={handleCopyCaption} style={s.copyBtn}>
                   {copiedCaption ? '✓ Copiado' : 'Copiar caption'}
                 </button>
+                {imagenGenerada && (
+  <button onClick={descargarImagen}>
+    Descargar imagen
+  </button>
+)}
               </div>
 
               {channel === 'WhatsApp Business' ? (

@@ -74,32 +74,42 @@ Reglas:
   const prompt = extendido ? promptExtendido : promptBase;
 
   try {
-    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": GEMINI_API_KEY,
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: prompt,
-              },
-            ],
-          },
-        ],
-        generationConfig: {
-          temperature: 0.8,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 1024,
-        },
-      }),
-    });
+    const MODELOS = [
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-lite"
+];
 
-    const data = await response.json();
+let response = null;
+let data = null;
+let ultimoError = null;
+
+for (const modelo of MODELOS) {
+  try {
+    response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${apiKey}`,
+      options
+    );
+
+    if (!response.ok) {
+      ultimoError = await response.text();
+      continue;
+    }
+
+    data = await response.json();
+
+    console.log(`Modelo usado: ${modelo}`);
+
+    break;
+  } catch (error) {
+    ultimoError = error;
+  }
+}
+
+if (!data) {
+  throw new Error(
+    `No fue posible generar el contenido. ${ultimoError}`
+  );
+}
 
     if (!response.ok) {
       console.error("Error de Gemini API:", data);

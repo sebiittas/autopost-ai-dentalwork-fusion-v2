@@ -39,11 +39,12 @@ function UserPanel({ usuario }) {
 
   const handleSavePost = async (resultado) => {
     try {
-      await crearPost(resultado.caption, usuario, null, {
-        visual_prompt: resultado.visual_prompt,
-        hashtags: resultado.hashtags,
-        compliance_notes: resultado.compliance_notes
-      });
+     await crearPost(resultado.caption, usuario, null, {
+  visual_prompt: resultado.visual_prompt,
+  hashtags: resultado.hashtags,
+  compliance_notes: resultado.compliance_notes,
+  image: resultado.image,
+});
       await cargarPosts();
       alert("Borrador guardado correctamente.");
     } catch (e) {
