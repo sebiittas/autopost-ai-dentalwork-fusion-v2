@@ -78,6 +78,10 @@ const PromptStudio = ({ usuario, onSavePost }) => {
   const [copiedCaption, setCopiedCaption]   = useState(false);
   const [copiedPrompt, setCopiedPrompt]     = useState(false);
   const [errorIA, setErrorIA]               = useState(null);
+  const [generandoImagen, setGenerandoImagen] = useState(false);
+  const [imagenGenerada, setImagenGenerada] = useState(null);
+  const [errorImagen, setErrorImagen]       = useState(null);
+  const [mostrarOriginal, setMostrarOriginal] = useState(false);
   const fileInputRef                        = useRef(null);
 
   // Cargar logos dinámicamente desde la API
@@ -142,9 +146,66 @@ const PromptStudio = ({ usuario, onSavePost }) => {
     return logosConfig.find(l => l.id === logoId) || logosConfig[0];
   };
 
+  const getAspectRatio = () => (format === 'Historia 9:16' ? '9:16' : '1:1');
+
+  // Convierte una imagen servida por URL (ej. el logo en /public/logos) a
+  // data URL base64, para poder mandarla como referencia a Gemini.
+  const urlToBase64 = (url) => new Promise((resolve, reject) => {
+    fetch(url)
+      .then(r => r.blob())
+      .then(blob => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      })
+      .catch(reject);
+  });
+
+  const handleGenerarImagen = async (prompt) => {
+    if (!prompt) return;
+    setGenerandoImagen(true);
+    setErrorImagen(null);
+    setMostrarOriginal(false);
+    try {
+      // Imágenes de referencia de alta fidelidad: la(s) foto(s) real(es) del
+      // paciente/clínica (si las hay) y el logo corporativo seleccionado.
+      // Así la IA los usa tal cual en vez de inventar una versión genérica.
+      const fidelidad = referenceImages.map(img => img.url);
+      const logoInfo = getLogoForPrompt();
+      if (logoInfo?.file) {
+        try {
+          fidelidad.push(await urlToBase64(logoInfo.file));
+        } catch (e) {
+          console.warn('No se pudo cargar el logo como referencia:', e);
+        }
+      }
+
+      const response = await fetch('/api/generarImagen', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, aspectRatio: getAspectRatio(), images: fidelidad })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setImagenGenerada(data.image);
+      } else {
+        setErrorImagen(data.error || 'No se pudo generar la imagen.');
+      }
+    } catch (err) {
+      setErrorImagen('Error de conexión al generar la imagen.');
+      console.error(err);
+    } finally {
+      setGenerandoImagen(false);
+    }
+  };
+
   const handleGenerate = async () => {
     setGenerando(true);
     setResultado(null);
+    setImagenGenerada(null);
+    setErrorImagen(null);
+    setMostrarOriginal(false);
     try {
       const logoInfo = getLogoForPrompt();
       const response = await fetch('/api/generarPost', {
@@ -173,6 +234,12 @@ Modo: ${mode}
       if (response.ok) {
         setResultado(data);
         setErrorIA(null);
+        // Generamos siempre la imagen del post con IA, usando la foto real
+        // y el logo como referencias, para que el mockup muestre cómo
+        // quedaría publicado de verdad.
+        if (data.visual_prompt) {
+          handleGenerarImagen(data.visual_prompt);
+        }
       } else {
         setErrorIA(data.error || 'Error desconocido');
       }
@@ -189,6 +256,9 @@ Modo: ${mode}
     setSpecification('');
     setReferenceImages([]);
     setErrorIA(null);
+    setImagenGenerada(null);
+    setErrorImagen(null);
+    setMostrarOriginal(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -209,6 +279,66 @@ Modo: ${mode}
       hashtags: resultado.hashtags,
       compliance_notes: resultado.compliance_notes,
     });
+  };
+
+  // ── Qué mostrar en el área de imagen del mockup ──────────────────────────
+  // Prioridad normal: imagen compuesta por IA (foto real + logo + diseño)
+  // > cargando > foto original (si la IA aún no respondió) > placeholder.
+  // El toggle "Ver original" fuerza a mostrar la foto tal cual se subió.
+  const renderImagenPost = () => {
+    if (mostrarOriginal && referenceImages[0]) {
+      return <img src={referenceImages[0].url} alt="Foto original" style={s.socialImage} />;
+    }
+    if (generandoImagen) {
+      return (
+        <div style={s.socialImagePlaceholder}>
+          <span style={s.spinnerDark} />
+          <span style={s.socialImagePlaceholderText}>
+            {referenceImages[0] ? 'Componiendo tu foto con el diseño…' : 'Generando imagen con IA…'}
+          </span>
+        </div>
+      );
+    }
+    if (imagenGenerada) {
+      return <img src={imagenGenerada} alt="Imagen generada por IA" style={s.socialImage} />;
+    }
+    if (referenceImages[0]) {
+      return <img src={referenceImages[0].url} alt="Foto de referencia" style={s.socialImage} />;
+    }
+    return (
+      <div style={s.socialImagePlaceholder}>
+        <span style={s.socialImagePlaceholderIcon}>{errorImagen ? '⚠' : '✦'}</span>
+        <span style={s.socialImagePlaceholderText}>
+          {errorImagen || 'Genera la imagen para ver cómo quedaría el post'}
+        </span>
+        <button
+          onClick={() => handleGenerarImagen(resultado?.visual_prompt)}
+          style={s.genImgBtn}
+        >
+          {errorImagen ? '↻ Reintentar' : '✦ Generar imagen'}
+        </button>
+      </div>
+    );
+  };
+
+  // Botones flotantes sobre la imagen: alternar foto original/diseño,
+  // y regenerar otra versión. Solo se muestran cuando hay algo que controlar.
+  const renderImagenControles = () => {
+    if (generandoImagen) return null;
+    return (
+      <div style={s.imgOverlayControls}>
+        {referenceImages[0] && imagenGenerada && (
+          <button onClick={() => setMostrarOriginal(v => !v)} style={s.regenImgBtn}>
+            {mostrarOriginal ? '✦ Ver diseño' : '📷 Ver original'}
+          </button>
+        )}
+        {imagenGenerada && !mostrarOriginal && (
+          <button onClick={() => handleGenerarImagen(resultado?.visual_prompt)} style={s.regenImgBtn}>
+            ↻ Otra versión
+          </button>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -530,14 +660,8 @@ Modo: ${mode}
                   </div>
                   <div style={s.waBubble}>
                     <div style={s.socialImageWrap}>
-                      {referenceImages[0] ? (
-                        <img src={referenceImages[0].url} alt="preview" style={s.socialImage} />
-                      ) : (
-                        <div style={s.socialImagePlaceholder}>
-                          <span style={s.socialImagePlaceholderIcon}>✦</span>
-                          <span style={s.socialImagePlaceholderText}>Imagen generada con el prompt visual</span>
-                        </div>
-                      )}
+                      {renderImagenPost()}
+                      {renderImagenControles()}
                     </div>
                     <p style={s.waCaption}>{resultado.caption}</p>
                     <p style={s.socialHashtags}>{resultado.hashtags?.map(h => `#${h}`).join(' ')}</p>
@@ -566,14 +690,8 @@ Modo: ${mode}
                   )}
 
                   <div style={s.socialImageWrap}>
-                    {referenceImages[0] ? (
-                      <img src={referenceImages[0].url} alt="preview" style={s.socialImage} />
-                    ) : (
-                      <div style={s.socialImagePlaceholder}>
-                        <span style={s.socialImagePlaceholderIcon}>✦</span>
-                        <span style={s.socialImagePlaceholderText}>Imagen generada con el prompt visual</span>
-                      </div>
-                    )}
+                    {renderImagenPost()}
+                    {renderImagenControles()}
                   </div>
 
                   {channel === 'Facebook' ? (
@@ -739,11 +857,15 @@ const s = {
   socialUsername: { fontSize: '13px', color: '#0c0c0c' },
   socialSubname:  { fontSize: '11px', color: '#afa99c' },
   socialDots:     { fontSize: '14px', color: '#afa99c', letterSpacing: '1px' },
-  socialImageWrap:{ width: '100%', aspectRatio: '1 / 1', background: '#f7f3ec' },
+  socialImageWrap:{ width: '100%', aspectRatio: '1 / 1', background: '#f7f3ec', position: 'relative', overflow: 'hidden' },
   socialImage:    { width: '100%', height: '100%', objectFit: 'cover', display: 'block' },
-  socialImagePlaceholder: { width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg,#fdfaf4,#f0ece2)' },
+  socialImagePlaceholder: { width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', background: 'linear-gradient(135deg,#fdfaf4,#f0ece2)' },
   socialImagePlaceholderIcon: { fontSize: '22px', color: '#c9a44c' },
   socialImagePlaceholderText: { fontSize: '11px', color: '#afa99c', textAlign: 'center', padding: '0 30px' },
+  spinnerDark:    { display: 'inline-block', width: '18px', height: '18px', border: '2px solid #e8e5df', borderTopColor: '#c9a44c', borderRadius: '50%', animation: 'spin 0.7s linear infinite' },
+  genImgBtn:      { fontSize: '11px', fontWeight: '700', color: '#9c7b2e', background: 'rgba(201,164,76,0.12)', border: '1px solid rgba(201,164,76,0.35)', borderRadius: '20px', padding: '6px 14px', cursor: 'pointer' },
+  imgOverlayControls: { position: 'absolute', top: '8px', right: '8px', display: 'flex', gap: '6px' },
+  regenImgBtn:    { fontSize: '10.5px', fontWeight: '700', color: 'white', background: 'rgba(12,12,12,0.55)', backdropFilter: 'blur(4px)', border: 'none', borderRadius: '20px', padding: '5px 10px', cursor: 'pointer', whiteSpace: 'nowrap' },
   socialActions:  { display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 14px 4px' },
   socialIcon:     { fontSize: '19px', color: '#3a3630' },
   socialLikes:    { fontSize: '12.5px', color: '#3a3630', margin: '4px 14px 0' },

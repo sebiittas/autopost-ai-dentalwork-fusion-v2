@@ -2,11 +2,14 @@
 // Gemini 2.5 Flash — con reintentos automáticos y modelo de respaldo
 
 // ── MODELOS en orden de preferencia ─────────────────────────────────────────
+// IMPORTANTE: gemini-1.5-flash, gemini-2.0-flash y gemini-2.0-flash-lite
+// fueron retirados por Google (shut down) — ya no existen en v1beta.
+// Lista actualizada con los modelos estables vigentes (junio 2026).
 const MODELOS = [
   "gemini-2.5-flash",
-  "gemini-2.0-flash",
-  "gemini-2.0-flash-lite",
-  "gemini-1.5-flash",
+  "gemini-2.5-flash-lite",
+  "gemini-3.5-flash",
+  "gemini-3.1-flash-lite",
 ];
 
 const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
